@@ -1,0 +1,922 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#4338ca">
+  <title>Quiz de Matemática — 7º ano</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #1f2937;
+      --muted: #64748b;
+      --brand: #4338ca;
+      --brand-dark: #3730a3;
+      --paper: #ffffff;
+      --page: #f4f6fb;
+      --line: #e2e8f0;
+      --good: #166534;
+      --good-bg: #f0fdf4;
+      --bad: #9a3412;
+      --bad-bg: #fff7ed;
+      --hint-bg: #fffbeb;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      background: var(--page);
+      color: var(--ink);
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      line-height: 1.55;
+    }
+
+    button, input, select { font: inherit; }
+
+    .topbar {
+      background: var(--paper);
+      border-bottom: 1px solid var(--line);
+      padding: 14px 20px;
+    }
+
+    .topbar-inner {
+      max-width: 1080px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+      color: var(--muted);
+      font-size: .92rem;
+    }
+
+    .brand {
+      color: var(--brand);
+      font-weight: 800;
+      letter-spacing: .01em;
+    }
+
+    main {
+      width: min(100% - 28px, 920px);
+      margin: 28px auto 48px;
+    }
+
+    .card {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 20px;
+      box-shadow: 0 12px 32px rgba(15, 23, 42, .07);
+      padding: clamp(20px, 4vw, 38px);
+    }
+
+    h1, h2, p { margin-top: 0; }
+    h1 { font-size: clamp(1.6rem, 4vw, 2.25rem); line-height: 1.2; }
+    h2 { font-size: 1.35rem; line-height: 1.3; }
+    .muted { color: var(--muted); }
+    .intro { max-width: 650px; }
+
+    .form-grid, .grade-row {
+      display: grid;
+      grid-template-columns: 1fr 180px;
+      gap: 16px;
+      margin: 24px 0;
+    }
+
+    .field label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 7px;
+    }
+
+    .field input, .field select {
+      width: 100%;
+      border: 1px solid #cbd5e1;
+      border-radius: 10px;
+      padding: 12px 13px;
+      background: white;
+      color: var(--ink);
+    }
+
+    .field input:focus, .field select:focus, button:focus-visible, .option:focus-within {
+      outline: 3px solid rgba(99, 102, 241, .28);
+      outline-offset: 2px;
+    }
+
+    .grade-fixed {
+      display: inline-flex;
+      align-items: center;
+      min-height: 45px;
+      padding: 9px 13px;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: #f8fafc;
+      font-weight: 700;
+    }
+
+    .grade-row { align-items: end; }
+
+    .btn {
+      border: 0;
+      border-radius: 10px;
+      padding: 11px 16px;
+      min-height: 44px;
+      font-weight: 750;
+      cursor: pointer;
+      transition: background .15s ease, transform .15s ease;
+    }
+
+    .btn:hover:not(:disabled) { transform: translateY(-1px); }
+    .btn:disabled { cursor: not-allowed; opacity: .48; }
+    .btn-primary { color: white; background: var(--brand); }
+    .btn-primary:hover:not(:disabled) { background: var(--brand-dark); }
+    .btn-secondary { background: #eef2ff; color: var(--brand-dark); }
+    .btn-quiet { background: #f1f5f9; color: #334155; }
+    .btn-hint { background: #fef3c7; color: #854d0e; }
+
+    .quiz-head {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .question-number {
+      color: var(--brand);
+      font-weight: 800;
+      font-size: .9rem;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+    }
+
+    .student-chip {
+      flex: 0 0 auto;
+      color: #475569;
+      background: #f1f5f9;
+      border-radius: 999px;
+      padding: 7px 12px;
+      font-size: .88rem;
+      font-weight: 700;
+    }
+
+    .progress-meta {
+      display: flex;
+      justify-content: space-between;
+      color: var(--muted);
+      font-size: .9rem;
+      margin: 12px 0 7px;
+    }
+
+    .progress-track {
+      height: 10px;
+      border-radius: 99px;
+      overflow: hidden;
+      background: #e9edf5;
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0;
+      background: linear-gradient(90deg, #6366f1, #4338ca);
+      border-radius: inherit;
+      transition: width .25s ease;
+    }
+
+    .question-nav {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 7px;
+      margin: 18px 0 26px;
+    }
+
+    .nav-dot {
+      width: 38px;
+      height: 36px;
+      padding: 0;
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      background: white;
+      color: #475569;
+      font-size: .82rem;
+      font-weight: 750;
+      cursor: pointer;
+    }
+
+    .nav-dot.current { border: 2px solid var(--brand); color: var(--brand); }
+    .nav-dot.done { background: #dcfce7; border-color: #86efac; color: var(--good); }
+    .nav-dot.pending { background: #fff7ed; border-color: #fdba74; color: var(--bad); }
+
+    .question-text {
+      white-space: pre-line;
+      font-size: 1.08rem;
+      margin: 20px 0;
+    }
+
+    .question-image {
+      display: block;
+      max-width: 100%;
+      max-height: 430px;
+      object-fit: contain;
+      margin: 18px auto 22px;
+      border-radius: 8px;
+    }
+
+    .image-error {
+      color: var(--bad);
+      text-align: center;
+      font-size: .9rem;
+    }
+
+    .data-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+    }
+
+    .data-table th, .data-table td {
+      border: 1px solid var(--line);
+      padding: 9px 11px;
+      text-align: center;
+    }
+
+    .data-table th { background: #f8fafc; }
+
+    .options {
+      display: grid;
+      gap: 10px;
+      margin: 18px 0 20px;
+    }
+
+    .option {
+      display: flex;
+      align-items: flex-start;
+      gap: 11px;
+      padding: 13px 15px;
+      border: 1px solid #cbd5e1;
+      border-radius: 12px;
+      cursor: pointer;
+      background: white;
+    }
+
+    .option:hover { border-color: #818cf8; background: #fafaff; }
+    .option:has(input:checked) { border-color: var(--brand); background: #eef2ff; }
+    .option:has(input:disabled) { cursor: default; }
+    .option input { margin: 4px 0 0; accent-color: var(--brand); }
+    .option-letter { font-weight: 800; min-width: 25px; }
+    .option-content { display: flex; gap: 6px; align-items: center; }
+
+    .feedback, .hint-box {
+      border-radius: 12px;
+      padding: 13px 15px;
+      margin: 15px 0;
+    }
+
+    .feedback { border: 1px solid; }
+    .feedback.good { color: var(--good); background: var(--good-bg); border-color: #86efac; }
+    .feedback.bad { color: var(--bad); background: var(--bad-bg); border-color: #fdba74; }
+    .feedback.notice { color: #854d0e; background: var(--hint-bg); border-color: #fcd34d; }
+    .hint-box { color: #854d0e; background: var(--hint-bg); border: 1px solid #fcd34d; }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-top: 20px;
+    }
+
+    .actions .spacer { flex: 1; }
+
+    .status-note {
+      color: var(--muted);
+      font-size: .9rem;
+      margin: 12px 0 0;
+    }
+
+    .result-score {
+      font-size: clamp(2rem, 7vw, 3.4rem);
+      font-weight: 850;
+      color: var(--brand);
+      margin: 12px 0 4px;
+    }
+
+    .result-summary {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 12px;
+      margin: 22px 0;
+    }
+
+    .summary-item {
+      padding: 15px;
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      background: #f8fafc;
+    }
+
+    .summary-item strong { display: block; font-size: 1.1rem; }
+    .small { font-size: .9rem; color: var(--muted); }
+
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    @media (max-width: 640px) {
+      main { margin-top: 16px; }
+      .form-grid, .grade-row { grid-template-columns: 1fr; }
+      .quiz-head { display: block; }
+      .student-chip { display: inline-block; margin-top: 8px; }
+      .actions .spacer { flex-basis: 100%; }
+      .actions .btn { flex: 1 1 auto; }
+      .result-summary { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar-inner">
+      <span class="brand">Quiz de Matemática</span>
+      <span>7º ano · Prova Semestral 2019</span>
+    </div>
+  </header>
+
+  <main id="app" aria-live="polite"></main>
+
+  <script>
+    // Gabarito do 7º ano: 6ª coluna de série na tabela completa;
+    // no recorte das questões 36–55, corresponde à 4ª coluna de respostas visíveis.
+    const questions = [
+      {
+        id: 36,
+        text: "Será aplicada uma reflexão no animal, ilustrado a seguir, pela reta M.\n\nSeguem algumas transformações aplicadas na figura.\n\nA reflexão descrita é a indicada em",
+        image: "36.png",
+        alt: "Animal e opções de transformações por reflexão em relação à reta M.",
+        options: ["I.", "II.", "III.", "IV."],
+        answer: 3,
+        hint: "Em uma reflexão, a figura aparece do outro lado da reta como se estivesse em um espelho. Observe a posição e a orientação do animal."
+      },
+      {
+        id: 37,
+        text: "As faces laterais de uma pirâmide têm forma geométrica",
+        options: ["circular.", "pentagonal.", "retangular.", "triangular."],
+        answer: 3,
+        hint: "Pense nas faces que ligam a base ao vértice de uma pirâmide."
+      },
+      {
+        id: 38,
+        text: "Nesse jogo da memória, cada carta estampa um ser vivo marinho. As cartas serão embaralhadas e viradas para baixo. Um jogador vai retirar, ao acaso, uma entre todas as cartas. A probabilidade de o jogador retirar uma carta da tartaruga é",
+        image: "38.png",
+        alt: "Cartas do jogo da memória com seres vivos marinhos.",
+        options: ["20%.", "10%.", "2%.", "0%."],
+        answer: 1,
+        hint: "Conte quantas cartas mostram tartarugas e quantas cartas há ao todo. Compare essas quantidades."
+      },
+      {
+        id: 39,
+        text: "Um jogador, representando Dick Vigarista, está na posição – 45 e vai tirar uma carta que contém um número. Esse número deverá ser acrescentado a – 45 e o resultado indicará a posição para a qual deve ir. Ele quer chegar à posição – 60, para ganhar o jogo.\n\nQue número deverá sair na carta?",
+        image: "39.png",
+        alt: "Ilustração do jogo Corrida Maluca.",
+        options: ["– 105", "– 15", "+ 15", "+ 105"],
+        answer: 1,
+        hint: "Escreva uma adição com a posição inicial e o número da carta. Pense qual número transforma –45 em –60."
+      },
+      {
+        id: 40,
+        text: "Será retirado, aleatoriamente, um peixe do aquário. A probabilidade de ser retirado um peixe de cor verde é de",
+        image: "40.png",
+        alt: "Aquário com peixes de diferentes cores.",
+        options: ["1%.", "3%.", "10%.", "30%."],
+        answer: 3,
+        hint: "Conte os peixes verdes e compare essa quantidade com o total de peixes do aquário."
+      },
+      {
+        id: 41,
+        text: "A balança está marcando o quanto o cliente está levando, de presunto, em quilograma (kg). Essa medida, em gramas, equivale a",
+        image: "41.png",
+        alt: "Balança mostrando a massa de presunto em quilogramas.",
+        options: ["1,2.", "12.", "120.", "1 200."],
+        answer: 3,
+        hint: "Lembre-se de quantos gramas há em 1 quilograma e use a medida indicada na balança."
+      },
+      {
+        id: 42,
+        text: "Caíram alguns pedaços de queijo no chão e o rato comeu 2, deixando alguns, mostrados na imagem. A fração que representa a quantidade de queijo que o rato comeu, com relação ao total de pedaços, é",
+        image: "42.png",
+        alt: "Rato e pedaços de queijo que sobraram.",
+        options: ["2/8", "2/6", "6/2", "8/2"],
+        answer: 0,
+        hint: "A fração deve comparar os pedaços comidos com o total de pedaços que havia."
+      },
+      {
+        id: 43,
+        text: "O polígono de cinco lados está sendo desenhado na malha.\n\nPara completar o desenho do pentágono, deve ser traçado um segmento com extremidades de coordenadas",
+        image: "43.png",
+        alt: "Malha quadriculada com parte de um pentágono desenhado.",
+        options: [
+          "(3, 4) e (2, 7).",
+          "(7, 4) e (2, 7).",
+          "(8, 7) e (3, 4).",
+          "(7, 4) e (3, 4)."
+        ],
+        answer: 3,
+        hint: "Observe os vértices que já aparecem na malha e identifique quais extremidades completam o contorno do pentágono."
+      },
+      {
+        id: 44,
+        text: "O resultado da potenciação ( – 3 )³ é",
+        options: ["– 27.", "– 9.", "9.", "27."],
+        answer: 0,
+        hint: "O expoente 3 indica que a base negativa aparece como fator três vezes. Resolva a multiplicação prestando atenção aos sinais."
+      },
+      {
+        id: 45,
+        text: "Uma pétala da rosácea é rotacionada 8 vezes até coincidir com a posição inicial. A medida do ângulo de cada rotação da pétala é igual a",
+        image: "45.png",
+        alt: "Rosácea circular formada por oito pétalas.",
+        options: ["8º.", "45º.", "90º.", "180º."],
+        answer: 1,
+        hint: "Uma volta completa corresponde a 360º. Divida a volta pelo número de rotações iguais."
+      },
+      {
+        id: 46,
+        text: "Na figura a seguir os ponteiros dos relógios formam ângulos com diversas medidas.\n\nO ângulo com medida mais próxima da medida de um ângulo raso encontra-se no relógio indicado pela letra",
+        image: "46.png",
+        alt: "Relógios identificados por letras, com diferentes aberturas entre os ponteiros.",
+        options: ["A.", "B.", "C.", "D."],
+        answer: 1,
+        hint: "Um ângulo raso mede 180º. Compare a abertura entre os ponteiros de cada relógio com uma linha reta."
+      },
+      {
+        id: 47,
+        text: "Tem-se, na imagem, uma flor desenhada na malha quadriculada. Os quadradinhos da malha têm 1 cm de lado.\n\nA medida, em cm, do contorno da flor é",
+        image: "47.png",
+        alt: "Flor desenhada em uma malha quadriculada.",
+        options: ["5.", "9.", "12.", "16."],
+        answer: 2,
+        hint: "Conte os lados dos quadradinhos que formam todo o contorno. Cada lado da malha mede 1 cm."
+      },
+      {
+        id: 48,
+        text: "A publicidade a seguir foi realizada por uma loja de eletrodomésticos.\n\nQuanto o comprador desse telefone celular pagará de entrada?",
+        image: "48.png",
+        alt: "Anúncio de telefone celular de R$ 1 400,00 com entrada de 30%.",
+        options: ["R$ 140,00", "R$ 350,00", "R$ 420,00", "R$ 840,00"],
+        answer: 2,
+        hint: "Calcule 30% de R$ 1 400,00. Você pode encontrar 10% primeiro e depois multiplicar por 3."
+      },
+      {
+        id: 49,
+        text: "Gabriela gasta R$ 120,00 por mês com a mensalidade de um curso de informática. No próximo mês essa mensalidade terá um aumento de 10%. O valor do aumento para o próximo mês será de",
+        options: ["R$ 132,00.", "R$ 130,00.", "R$ 12,00.", "R$ 10,00."],
+        answer: 2,
+        hint: "O enunciado pergunta o valor do aumento, não o novo valor da mensalidade. Calcule 10% de R$ 120,00."
+      },
+      {
+        id: 50,
+        text: "Roberto foi ao açougue comprar carne. Ele pediu 4 kg e o valor a pagar, indicado na balança, foi R$ 80,00. Solicitou ao açougueiro para acrescentar mais carne, chegando a 10 kg no total. O valor que Roberto pagou, em reais, pela carne foi",
+        options: ["480.", "320.", "200.", "120."],
+        answer: 2,
+        hint: "Descubra o preço de 1 kg usando o valor de 4 kg. Depois, calcule o preço de 10 kg."
+      },
+      {
+        id: 51,
+        text: "O professor solicitou aos estudantes que identificassem um problema de construção no gráfico.\n\nEles apresentaram quatro descrições de possíveis problemas:\n\nI. O eixo dos anos mistura ano com bimestre.\nII. A escala do eixo vertical deveria ser de 10 em 10, ao invés de 5 em 5.\nIII. O gráfico deveria ser de barras horizontais ao invés de barras verticais.\nIV. A coluna de carros vendidos deveria aparecer antes da de carros comprados.\n\nA descrição que indica um problema de construção do gráfico é a",
+        image: "51.png",
+        alt: "Gráfico de compra e venda de carros por ano.",
+        options: ["I.", "II.", "III.", "IV."],
+        answer: 0,
+        hint: "Observe os rótulos, as categorias e a escala dos eixos. Procure algo que não corresponda aos dados representados."
+      },
+      {
+        id: 52,
+        text: "Na faixa etária de 11 a 18 anos, os jovens do Reino Unido consomem, em média, 77 litros de líquidos adoçados (sucos, energéticos, refrigerantes) por ano.\n\nA quantidade média anual de líquidos adoçados, em mililitros, consumida por esses jovens é",
+        options: ["770 000.", "77 000.", "7 700.", "770."],
+        answer: 1,
+        hint: "Converta litros em mililitros. Para isso, lembre-se da equivalência entre 1 litro e mil mililitros."
+      },
+      {
+        id: 53,
+        text: "Paulo calculou a média aritmética simples das suas notas nas atividades de Matemática do mês, mostradas no quadro.\n\nA média aritmética das notas de Paulo é",
+        image: "53.png",
+        alt: "Quadro com as notas de Paulo em sete atividades de Matemática.",
+        table: {
+          headers: ["Atividades de Matemática", "1ª", "2ª", "3ª", "4ª", "5ª", "6ª", "7ª"],
+          rows: [["Notas de Paulo", "7,5", "4,0", "4,0", "3,0", "5,5", "5,0", "6,0"]]
+        },
+        options: ["3,0.", "5,0.", "6,0.", "7,5."],
+        answer: 1,
+        hint: "Some as sete notas e divida o resultado pela quantidade de atividades."
+      },
+      {
+        id: 54,
+        text: "A flexão com halteres pode ser realizada em um banco inclinado, como se observa na ilustração.\n\nO ângulo â, tal como representado na figura, é classificado como",
+        image: "54.png",
+        alt: "Pessoa fazendo exercício em banco inclinado, com o ângulo â indicado.",
+        options: ["obtuso.", "agudo.", "raso.", "reto."],
+        answer: 1,
+        hint: "Compare a abertura indicada com um ângulo reto, que mede 90º."
+      },
+      {
+        id: 55,
+        text: "Em cada uma das situações são apresentadas duas grandezas que se relacionam.\n\nSituação 1: A velocidade média de um automóvel e o tempo que ele leva para percorrer uma distância fixa.\n\nSituação 2: A área do quadrado e a medida do seu lado. A = x².\n\nSituação 3: Um número natural e o seu dobro. x → 2x.\n\nSituação 4: A quantidade de máquinas trabalhando e a quantidade de peças produzidas.\n\nA situação que apresenta duas grandezas que se relacionam de forma inversamente proporcional é a",
+        image: "55.png",
+        alt: "Ilustrações das quatro situações de grandezas relacionadas.",
+        options: ["1.", "2.", "3.", "4."],
+        answer: 0,
+        hint: "Em uma relação inversamente proporcional, quando uma grandeza aumenta, a outra diminui. Considere a distância fixa descrita na situação."
+      }
+    ];
+
+    const app = document.getElementById("app");
+    const letters = ["A", "B", "C", "D"];
+    const maximumPoints = questions.length * 2;
+    let advanceTimer = null;
+
+    const state = {
+      studentName: "",
+      classLetter: "",
+      current: 0,
+      selected: Array(questions.length).fill(null),
+      usedHint: Array(questions.length).fill(false),
+      hintVisible: Array(questions.length).fill(false),
+      firstWrong: Array(questions.length).fill(false),
+      finished: Array(questions.length).fill(false),
+      points: Array(questions.length).fill(0),
+      feedback: Array(questions.length).fill(null),
+      started: false,
+      showResults: false
+    };
+
+    function resolvedCount() {
+      return state.finished.filter(Boolean).length;
+    }
+
+    function totalPoints() {
+      return state.points.reduce((sum, points) => sum + points, 0);
+    }
+
+    function escapeHtml(value) {
+      return String(value).replace(/[&<>"']/g, char => ({
+        "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+      }[char]));
+    }
+
+    function startQuiz(event) {
+      event.preventDefault();
+      const form = new FormData(event.target);
+      const name = String(form.get("studentName") || "").trim();
+      const classLetter = String(form.get("classLetter") || "");
+
+      if (!name || !["A", "B", "C"].includes(classLetter)) return;
+
+      state.studentName = name;
+      state.classLetter = classLetter;
+      state.started = true;
+      renderQuestion();
+    }
+
+    function renderStart() {
+      app.innerHTML = `
+        <section class="card intro">
+          <p class="question-number">Boas-vindas</p>
+          <h1>Quiz de Matemática</h1>
+          <p class="muted">Responda às questões no seu ritmo. Você pode pular uma questão e voltar a ela depois. Para concluir, todas precisam estar respondidas definitivamente.</p>
+
+          <form onsubmit="startQuiz(event)">
+            <div class="form-grid">
+              <div class="field">
+                <label for="studentName">Nome</label>
+                <input id="studentName" name="studentName" type="text" maxlength="80" autocomplete="name" required>
+              </div>
+              <div class="field">
+                <label for="classLetter">Turma</label>
+                <select id="classLetter" name="classLetter" required>
+                  <option value="">Escolha</option>
+                  <option value="A">7º A</option>
+                  <option value="B">7º B</option>
+                  <option value="C">7º C</option>
+                </select>
+              </div>
+            </div>
+            <div class="grade-row">
+              <div>
+                <span class="small">Ano escolar</span><br>
+                <span class="grade-fixed">7º ano</span>
+              </div>
+              <button class="btn btn-primary" type="submit">Iniciar quiz</button>
+            </div>
+          </form>
+        </section>`;
+    }
+
+    function renderNav() {
+      return questions.map((question, index) => {
+        const status = state.finished[index] ? "done" :
+          (state.feedback[index] && state.feedback[index].type === "bad" ? "pending" : "");
+        const current = index === state.current ? "current" : "";
+        const accessibleStatus = state.finished[index] ? "respondida" :
+          (state.firstWrong[index] ? "com tentativa incorreta" : "pendente");
+
+        return `<button type="button" class="nav-dot ${status} ${current}"
+          aria-label="Ir para a questão ${question.id}, ${accessibleStatus}"
+          aria-current="${index === state.current ? "step" : "false"}"
+          onclick="goToQuestion(${index})">${question.id}</button>`;
+      }).join("");
+    }
+
+    function renderDataTable(table) {
+      if (!table) return "";
+      return `
+        <div style="overflow-x:auto">
+          <table class="data-table">
+            <thead><tr>${table.headers.map(item => `<th>${escapeHtml(item)}</th>`).join("")}</tr></thead>
+            <tbody>
+              ${table.rows.map(row => `<tr>${row.map(item => `<td>${escapeHtml(item)}</td>`).join("")}</tr>`).join("")}
+            </tbody>
+          </table>
+        </div>`;
+    }
+
+    function nextPendingIndex(fromIndex) {
+      for (let offset = 1; offset <= questions.length; offset++) {
+        const candidate = (fromIndex + offset) % questions.length;
+        if (!state.finished[candidate]) return candidate;
+      }
+      return -1;
+    }
+
+    function renderQuestion() {
+      if (!state.started) return renderStart();
+      if (state.showResults) return renderResults();
+
+      const index = state.current;
+      const question = questions[index];
+      const resolved = resolvedCount();
+      const selected = state.selected[index];
+      const locked = state.finished[index];
+      const feedback = state.feedback[index];
+      const waitingForHint = state.firstWrong[index] && !state.usedHint[index] && !locked;
+      const progress = Math.round((resolved / questions.length) * 100);
+
+      const imageHtml = question.image
+        ? `<img class="question-image" src="${escapeHtml(question.image)}" alt="${escapeHtml(question.alt)}"
+              onerror="this.hidden=true; this.nextElementSibling.hidden=false">
+           <p class="image-error" hidden>Não foi possível carregar ${escapeHtml(question.image)}. Verifique se a imagem está na mesma pasta do arquivo HTML.</p>`
+        : "";
+
+      const optionsHtml = question.options.map((option, optionIndex) => `
+        <label class="option">
+          <input type="radio" name="answer" value="${optionIndex}"
+            ${selected === optionIndex ? "checked" : ""}
+            ${locked ? "disabled" : ""}
+            onchange="selectAnswer(${optionIndex})">
+          <span class="option-letter">${letters[optionIndex]}.</span>
+          <span class="option-content">${escapeHtml(option)}</span>
+        </label>`).join("");
+
+      const feedbackHtml = feedback
+        ? `<div class="feedback ${feedback.type}" role="status">${feedback.text}</div>`
+        : "";
+
+      const hintHtml = state.hintVisible[index]
+        ? `<div class="hint-box" role="note"><strong>Dica:</strong> ${escapeHtml(question.hint)}</div>`
+        : "";
+
+      const submitLabel = locked ? "Resposta registrada" : "Enviar resposta";
+      const submitDisabled = locked || selected === null || waitingForHint;
+      const allResolved = resolved === questions.length;
+
+      app.innerHTML = `
+        <section class="card">
+          <div class="quiz-head">
+            <div>
+              <div class="question-number">Questão ${question.id} · ${index + 1} de ${questions.length}</div>
+              <h1>Questão ${question.id}</h1>
+            </div>
+            <span class="student-chip">${escapeHtml(state.studentName)} · 7º ${escapeHtml(state.classLetter)}</span>
+          </div>
+
+          <div class="progress-meta">
+            <span>Progresso: ${resolved} de ${questions.length} concluídas</span>
+            <span>${progress}%</span>
+          </div>
+          <div class="progress-track" role="progressbar" aria-label="Progresso do quiz"
+               aria-valuenow="${resolved}" aria-valuemin="0" aria-valuemax="${questions.length}">
+            <div class="progress-fill" style="width:${progress}%"></div>
+          </div>
+
+          <nav class="question-nav" aria-label="Navegação pelas questões">
+            ${renderNav()}
+          </nav>
+
+          <p class="question-text">${escapeHtml(question.text)}</p>
+          ${renderDataTable(question.table)}
+          ${imageHtml}
+
+          <fieldset style="border:0;padding:0;margin:0">
+            <legend class="sr-only">Escolha uma alternativa</legend>
+            <div class="options">${optionsHtml}</div>
+          </fieldset>
+
+          ${feedbackHtml}
+          ${hintHtml}
+
+          <div class="actions">
+            <button class="btn btn-hint" type="button" onclick="showHint(${index})"
+              ${state.hintVisible[index] || locked ? "disabled" : ""}>Dica</button>
+            <button class="btn btn-primary" type="button" onclick="submitAnswer(${index})"
+              ${submitDisabled ? "disabled" : ""}>${submitLabel}</button>
+            <span class="spacer"></span>
+            <button class="btn btn-quiet" type="button" onclick="previousQuestion()" ${index === 0 ? "disabled" : ""}>Anterior</button>
+            <button class="btn btn-secondary" type="button" onclick="skipQuestion(${index})" ${locked ? "disabled" : ""}>Pular questão</button>
+            <button class="btn btn-primary" type="button" onclick="nextQuestion()">
+              ${index === questions.length - 1
+                ? (allResolved ? "Finalizar avaliação" : `Ver pendentes (${questions.length - resolved})`)
+                : "Próxima"}
+            </button>
+          </div>
+          <p class="status-note">Pular não atribui pontos. A questão continua disponível para você responder depois.</p>
+        </section>`;
+    }
+
+    function selectAnswer(optionIndex) {
+      if (state.finished[state.current]) return;
+      state.selected[state.current] = optionIndex;
+      renderQuestion();
+    }
+
+    function showHint(index) {
+      if (state.finished[index] || state.hintVisible[index]) return;
+      state.hintVisible[index] = true;
+      state.usedHint[index] = true;
+      renderQuestion();
+    }
+
+    function submitAnswer(index) {
+      if (state.finished[index] || state.selected[index] === null) return;
+
+      const question = questions[index];
+
+      if (question.answer === null) {
+        state.feedback[index] = {
+          type: "notice",
+          text: "Esta questão ainda precisa ter o gabarito configurado no código. Sua resposta não foi registrada nem pontuada."
+        };
+        renderQuestion();
+        return;
+      }
+
+      const isCorrect = state.selected[index] === question.answer;
+
+      if (isCorrect) {
+        state.finished[index] = true;
+        state.points[index] = state.usedHint[index] ? 1 : 2;
+        state.feedback[index] = {
+          type: "good",
+          text: state.usedHint[index]
+            ? "Muito bem! Você chegou à resposta correta usando a dica. Esta questão vale 1 ponto."
+            : "Muito bem! Resposta correta. Você ganhou 2 pontos."
+        };
+      } else if (!state.usedHint[index]) {
+        state.firstWrong[index] = true;
+        state.feedback[index] = {
+          type: "bad",
+          text: "Ainda não é essa. Tudo bem: pense mais um pouco e use o botão “Dica” para tentar novamente. A resposta correta não será revelada."
+        };
+      } else {
+        state.finished[index] = true;
+        state.points[index] = 0;
+        state.feedback[index] = {
+          type: "bad",
+          text: "Desta vez, a questão foi encerrada. Você não recebe pontos nela, mas seguirá para outra questão. Continue se dedicando!"
+        };
+        const next = nextPendingIndex(index);
+        if (next !== -1) {
+          advanceTimer = setTimeout(() => {
+            state.current = next;
+            renderQuestion();
+          }, 1400);
+        }
+      }
+
+      renderQuestion();
+    }
+
+    function goToQuestion(index) {
+      if (index < 0 || index >= questions.length || state.showResults) return;
+      if (advanceTimer) clearTimeout(advanceTimer);
+      state.current = index;
+      renderQuestion();
+    }
+
+    function previousQuestion() {
+      if (state.current > 0) goToQuestion(state.current - 1);
+    }
+
+    function nextQuestion() {
+      if (advanceTimer) clearTimeout(advanceTimer);
+
+      if (state.current < questions.length - 1) {
+        goToQuestion(state.current + 1);
+        return;
+      }
+
+      if (resolvedCount() === questions.length) {
+        state.showResults = true;
+        renderResults();
+        return;
+      }
+
+      const firstPending = state.finished.findIndex(done => !done);
+      if (firstPending !== -1) {
+        state.current = firstPending;
+        renderQuestion();
+      }
+    }
+
+    function skipQuestion(index) {
+      if (state.finished[index]) return;
+      if (advanceTimer) clearTimeout(advanceTimer);
+
+      const next = nextPendingIndex(index);
+      if (next !== -1) state.current = next;
+
+      renderQuestion();
+    }
+
+    function renderResults() {
+      const points = totalPoints();
+      const grade = (points / maximumPoints) * 10;
+      const formattedGrade = grade.toLocaleString("pt-BR", {
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1
+      });
+
+      let message = "Parabéns por concluir o quiz! Continue praticando e valorizando cada aprendizado.";
+      if (points === maximumPoints) {
+        message = "Excelente trabalho! Você alcançou a pontuação máxima. Continue assim!";
+      } else if (grade >= 7) {
+        message = "Muito bom trabalho! Você demonstrou dedicação e avançou em vários desafios.";
+      } else if (grade >= 5) {
+        message = "Parabéns por concluir! Cada questão é uma oportunidade de aprender e melhorar.";
+      }
+
+      app.innerHTML = `
+        <section class="card">
+          <p class="question-number">Avaliação concluída</p>
+          <h1>Mandou bem, ${escapeHtml(state.studentName)}!</h1>
+          <p>${escapeHtml(message)}</p>
+
+          <div class="result-summary">
+            <div class="summary-item"><span class="small">Estudante</span><strong>${escapeHtml(state.studentName)}</strong></div>
+            <div class="summary-item"><span class="small">Turma</span><strong>7º ${escapeHtml(state.classLetter)}</strong></div>
+          </div>
+
+          <p class="small">Pontuação total</p>
+          <div class="result-score">${points} de ${maximumPoints} pontos</div>
+          <p class="muted">Nota: <strong>${formattedGrade} de 10,0</strong></p>
+
+          <div class="actions">
+            <button class="btn btn-secondary" type="button" onclick="reviewQuestions()">Rever questões</button>
+            <button class="btn btn-quiet" type="button" onclick="restartQuiz()">Recomeçar quiz</button>
+          </div>
+        </section>`;
+    }
+
+    function reviewQuestions() {
+      state.showResults = false;
+      const firstPending = state.finished.findIndex(done => !done);
+      state.current = firstPending === -1 ? 0 : firstPending;
+      renderQuestion();
+    }
+
+    function restartQuiz() {
+      if (advanceTimer) clearTimeout(advanceTimer);
+      state.studentName = "";
+      state.classLetter = "";
+      state.current = 0;
+      state.selected = Array(questions.length).fill(null);
+      state.usedHint = Array(questions.length).fill(false);
+      state.hintVisible = Array(questions.length).fill(false);
+      state.firstWrong = Array(questions.length).fill(false);
+      state.finished = Array(questions.length).fill(false);
+      state.points = Array(questions.length).fill(0);
+      state.feedback = Array(questions.length).fill(null);
+      state.started = false;
+      state.showResults = false;
+      renderStart();
+    }
+
+    renderStart();
+  </script>
+</body>
+</html>
